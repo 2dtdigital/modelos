@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catálogo de Produtos - Mega Fitness</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #f5f5f5;
+    --surface-hover: #eeeeee;
+    --border: #e0e0e0;
+    --text: #1a1a1a;
+    --text-muted: #777777;
+    --accent: #d4678c;
+    --accent-light: #e890ab;
+    --accent-dim: rgba(212, 103, 140, 0.08);
+    --accent-glow: rgba(212, 103, 140, 0.12);
+    --radius: 12px;
+    --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Subtle background texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse at 20% 0%, rgba(212, 103, 140, 0.03) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 100%, rgba(212, 103, 140, 0.02) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .header img.logo {
+    max-width: 180px;
+    height: auto;
+    margin-bottom: 20px;
+  }
+
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 5vw, 42px);
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+    color: var(--accent);
+  }
+
+  .header p {
+    color: var(--text-muted);
+    font-size: 15px;
+  }
+
+  /* Breadcrumb */
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    min-height: 40px;
+  }
+
+  .breadcrumb-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 8px;
+    transition: var(--transition);
+  }
+
+  .breadcrumb-item:hover {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  .breadcrumb-item.active {
+    color: var(--text);
+    cursor: default;
+    background: var(--surface);
+  }
+
+  .breadcrumb-item.active:hover {
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .breadcrumb-sep {
+    color: #ccc;
+    font-size: 12px;
+    user-select: none;
+  }
+
+  .breadcrumb-home-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Loading */
+  .loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 0;
+    gap: 16px;
+  }
+
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  /* Error */
+  .error {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+  }
+
+  .error-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+
+  .error h3 {
+    color: var(--text);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .error p {
+    font-size: 14px;
+    max-width: 400px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  .retry-btn {
+    margin-top: 20px;
+    padding: 10px 24px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid rgba(212, 103, 140, 0.2);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .retry-btn:hover {
+    background: rgba(212, 103, 140, 0.15);
+  }
+
+  /* Folder Grid */
+  .folder-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    animation: fadeUp 0.4s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .folder-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .folder-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--accent-glow) 0%, transparent 60%);
+    opacity: 0;
+    transition: var(--transition);
+  }
+
+  .folder-card:hover {
+    border-color: rgba(212, 103, 140, 0.3);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  }
+
+  .folder-card:hover::before {
+    opacity: 1;
+  }
+
+  .folder-icon {
+    width: 48px;
+    height: 48px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .folder-card span {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--text);
+    position: relative;
+    z-index: 1;
+    word-break: break-word;
+  }
+
+  /* Image Grid */
+  .image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    animation: fadeUp 0.4s ease;
+  }
+
+  .image-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+  }
+
+  .image-card:hover {
+    border-color: rgba(212, 103, 140, 0.3);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  }
+
+  .image-card img {
+    width: 100%;
+    aspect-ratio: 4/5;
+    object-fit: cover;
+    display: block;
+    transition: var(--transition);
+  }
+
+  .image-card:hover img {
+    transform: scale(1.03);
+  }
+
+  .image-card .image-name {
+    padding: 12px 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--text-muted);
+  }
+
+  .empty-state svg {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+  }
+
+  .empty-state p {
+    font-size: 15px;
+  }
+
+  /* Lightbox */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.92);
+    backdrop-filter: blur(20px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: 0.3s ease;
+  }
+
+  .lightbox.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .lightbox-img {
+    max-width: 90vw;
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5);
+    transition: 0.3s ease;
+    transform: scale(0.95);
+  }
+
+  .lightbox.active .lightbox-img {
+    transform: scale(1);
+  }
+
+  .lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+  }
+
+  .lightbox-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+  }
+
+  .lightbox-nav:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .lightbox-nav.prev { left: 20px; }
+  .lightbox-nav.next { right: 20px; }
+
+  .lightbox-counter {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .lightbox-filename {
+    position: absolute;
+    bottom: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    font-weight: 500;
+    max-width: 80%;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* API Key Setup */
+  .setup-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .setup-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .setup-card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    margin-bottom: 12px;
+  }
+
+  .setup-card p {
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+  .setup-input {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: var(--transition);
+    margin-bottom: 16px;
+  }
+
+  .setup-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+
+  .setup-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .setup-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .setup-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Count badge */
+  .content-count {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-bottom: 20px;
+    font-weight: 500;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .container { padding: 24px 16px; }
+    .folder-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+    .image-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+    .folder-card { padding: 20px 16px; }
+    .lightbox-nav { width: 40px; height: 40px; }
+    .lightbox-nav.prev { left: 10px; }
+    .lightbox-nav.next { right: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Setup Screen -->
+<div class="setup-overlay" id="setupOverlay" style="display:none;">
+  <div class="setup-card">
+    <h2>Configuração</h2>
+    <p>Insira sua API Key do Google para acessar a galeria de fotos.</p>
+    <input type="text" class="setup-input" id="apiKeyInput" placeholder="Cole sua API Key aqui..." />
+    <button class="setup-btn" id="setupBtn" onclick="saveApiKey()">Acessar Galeria</button>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="container">
+  <div class="header">
+    <img class="logo" src="https://acdn-us.mitiendanube.com/stores/002/372/292/themes/common/logo-1938007299-1674060838-6d5a57005624afb03f4f3dd9aa1ec3531674060839-480-0.webp" alt="Mega Fitness" />
+    <h1>Catálogo de Produtos</h1>
+    <p>Navegue pelas pastas e visualize os produtos da Mega Fitness</p>
+  </div>
+
+  <div class="breadcrumb" id="breadcrumb"></div>
+  <div class="content-count" id="contentCount"></div>
+  <div id="content"></div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <button class="lightbox-nav prev" onclick="navigateLightbox(-1)">‹</button>
+  <button class="lightbox-nav next" onclick="navigateLightbox(1)">›</button>
+  <img class="lightbox-img" id="lightboxImg" src="" alt="" />
+  <div class="lightbox-filename" id="lightboxFilename"></div>
+  <div class="lightbox-counter" id="lightboxCounter"></div>
+</div>
+
+<script>
+  // ============ CONFIG ============
+  const ROOT_FOLDER_ID = '1jQb4mdH2bYe8tfLoRdheIzuVLp9J2J-D';
+  let API_KEY = 'AIzaSyCxS7zU5E7kxiHslEMVidgjff7LALnnJ58';
+
+  // ============ STATE ============
+  let navigationStack = [];
+  let currentImages = [];
+  let lightboxIndex = 0;
+  let cache = {};
+
+  // ============ INIT ============
+  function init() {
+    document.getElementById('setupOverlay').style.display = 'none';
+    loadFolder(ROOT_FOLDER_ID, 'Início');
+  }
+
+  function getStoredKey() {
+    try { return window._apiKey || ''; } catch(e) { return ''; }
+  }
+
+  function saveApiKey() {
+    const key = document.getElementById('apiKeyInput').value.trim();
+    if (!key) return;
+    API_KEY = key;
+    window._apiKey = key;
+    document.getElementById('setupOverlay').style.display = 'none';
+    loadFolder(ROOT_FOLDER_ID, 'Início');
+  }
+
+  document.getElementById('apiKeyInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') saveApiKey();
+  });
+
+  // ============ API ============
+  async function fetchDriveItems(folderId) {
+    if (cache[folderId]) return cache[folderId];
+
+    const fields = 'files(id,name,mimeType,thumbnailLink,webContentLink,imageMediaMetadata)';
+    const q = encodeURIComponent(`'${folderId}' in parents and trashed=false`);
+    const orderBy = encodeURIComponent('name');
+    const url = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=${fields}&orderBy=${orderBy}&pageSize=1000&supportsAllDrives=true&includeItemsFromAllDrives=true&key=${API_KEY}`;
+
+    console.log('Fetching:', url);
+    const res = await fetch(url);
+    const data = await res.json();
+    console.log('Drive API response for folder', folderId, data);
+    
+    if (!res.ok) {
+      throw new Error(data.error?.message || `Erro ${res.status}`);
+    }
+    cache[folderId] = data.files || [];
+    return cache[folderId];
+  }
+
+  // ============ NAVIGATION ============
+  async function loadFolder(folderId, folderName) {
+    const content = document.getElementById('content');
+    const countEl = document.getElementById('contentCount');
+
+    // Update stack
+    const existingIndex = navigationStack.findIndex(s => s.id === folderId);
+    if (existingIndex >= 0) {
+      navigationStack = navigationStack.slice(0, existingIndex + 1);
+    } else {
+      navigationStack.push({ id: folderId, name: folderName });
+    }
+
+    renderBreadcrumb();
+
+    // Loading
+    content.innerHTML = `
+      <div class="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">Carregando...</div>
+      </div>
+    `;
+    countEl.textContent = '';
+
+    try {
+      const items = await fetchDriveItems(folderId);
+      const folders = items.filter(i => i.mimeType === 'application/vnd.google-apps.folder');
+      const images = items.filter(i => i.mimeType.startsWith('image/'));
+
+      currentImages = images;
+
+      if (folders.length === 0 && images.length === 0) {
+        content.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+            </svg>
+            <p>Esta pasta está vazia</p>
+          </div>
+        `;
+        countEl.textContent = '';
+        return;
+      }
+
+      let html = '';
+
+      // Folders
+      if (folders.length > 0) {
+        const parts = [];
+        if (folders.length > 0) parts.push(`${folders.length} pasta${folders.length > 1 ? 's' : ''}`);
+        if (images.length > 0) parts.push(`${images.length} foto${images.length > 1 ? 's' : ''}`);
+        countEl.textContent = parts.join(' · ');
+
+        html += '<div class="folder-grid">';
+        folders.forEach(f => {
+          html += `
+            <div class="folder-card" onclick="loadFolder('${f.id}', '${f.name.replace(/'/g, "\\'")}')">
+              <svg class="folder-icon" viewBox="0 0 24 24" fill="none">
+                <path d="M2 6a2 2 0 012-2h4.586a1 1 0 01.707.293L11 6H20a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" 
+                      fill="var(--accent)" opacity="0.2" stroke="var(--accent)" stroke-width="1.5"/>
+              </svg>
+              <span>${escapeHtml(f.name)}</span>
+            </div>
+          `;
+        });
+        html += '</div>';
+      }
+
+      // Images
+      if (images.length > 0) {
+        if (folders.length === 0) {
+          countEl.textContent = `${images.length} foto${images.length > 1 ? 's' : ''}`;
+        }
+
+        html += `<div class="image-grid" ${folders.length > 0 ? 'style="margin-top:32px;"' : ''}>`;
+        images.forEach((img, idx) => {
+          const thumbUrl = getImageUrl(img, 400);
+          html += `
+            <div class="image-card" onclick="openLightbox(${idx})">
+              <img src="${thumbUrl}" alt="${escapeHtml(img.name)}" loading="lazy" />
+              <div class="image-name">${escapeHtml(img.name)}</div>
+            </div>
+          `;
+        });
+        html += '</div>';
+      }
+
+      content.innerHTML = html;
+
+    } catch (err) {
+      console.error(err);
+      content.innerHTML = `
+        <div class="error">
+          <div class="error-icon">⚠</div>
+          <h3>Não foi possível carregar</h3>
+          <p>${escapeHtml(err.message)}</p>
+          <button class="retry-btn" onclick="loadFolder('${folderId}', '${folderName.replace(/'/g, "\\'")}')">Tentar novamente</button>
+        </div>
+      `;
+      countEl.textContent = '';
+    }
+  }
+
+  // ============ BREADCRUMB ============
+  function renderBreadcrumb() {
+    const bc = document.getElementById('breadcrumb');
+    let html = '';
+
+    navigationStack.forEach((item, idx) => {
+      if (idx > 0) {
+        html += '<span class="breadcrumb-sep">›</span>';
+      }
+
+      const isLast = idx === navigationStack.length - 1;
+      const icon = idx === 0 ? `<svg class="breadcrumb-home-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg>` : '';
+
+      html += `<button class="breadcrumb-item ${isLast ? 'active' : ''}" 
+                onclick="${isLast ? '' : `loadFolder('${item.id}', '${item.name.replace(/'/g, "\\'")}')`}">
+                ${icon}${escapeHtml(item.name)}
+              </button>`;
+    });
+
+    bc.innerHTML = html;
+  }
+
+  // ============ LIGHTBOX ============
+  function openLightbox(index) {
+    lightboxIndex = index;
+    updateLightbox();
+    document.getElementById('lightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  function navigateLightbox(dir) {
+    lightboxIndex = (lightboxIndex + dir + currentImages.length) % currentImages.length;
+    updateLightbox();
+  }
+
+  function updateLightbox() {
+    const img = currentImages[lightboxIndex];
+    const url = getImageUrl(img, 1600);
+    document.getElementById('lightboxImg').src = url;
+    document.getElementById('lightboxImg').alt = img.name;
+    document.getElementById('lightboxFilename').textContent = img.name;
+    document.getElementById('lightboxCounter').textContent = `${lightboxIndex + 1} / ${currentImages.length}`;
+  }
+
+  // Keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    const lb = document.getElementById('lightbox');
+    if (!lb.classList.contains('active')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') navigateLightbox(-1);
+    if (e.key === 'ArrowRight') navigateLightbox(1);
+  });
+
+  // Click outside image to close
+  document.getElementById('lightbox').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('lightbox')) closeLightbox();
+  });
+
+  // ============ HELPERS ============
+  function getImageUrl(file, size) {
+    if (file.thumbnailLink) {
+      return file.thumbnailLink.replace(/=s\d+/, `=s${size}`);
+    }
+    return `https://drive.google.com/thumbnail?id=${file.id}&sz=s${size}`;
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // ============ START ============
+  init();
+</script>
+</body>
+</html>
